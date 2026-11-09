@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>FG-WVAM: World-Value-Action Model with Future Target Grounding</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow">Anonymous submission &middot; under double-blind review</p>
+    <h1>World-Value-Action Model with<br>Future Target Grounding</h1>
+    <p class="subtitle">
+      FG-WVAM &middot; Language-goal aerial object navigation
+    </p>
+    <p class="authors">Anonymous Authors</p>
+    <div class="links">
+      <!-- Replace # with the anonymous OpenReview forum link. -->
+      <a class="btn" href="#">Paper</a>
+      <a class="btn" href="https://anonymous.4open.science/r/FG-WVAM-47F0/">Code</a>
+      <a class="btn" href="#demos">Videos</a>
+    </div>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <h2>Abstract</h2>
+    <p class="abstract">
+      Language-goal aerial object navigation requires an unmanned aerial
+      vehicle (UAV) to find a target object specified by a language description
+      and stop when it is observed. Unlike aerial vision-language navigation,
+      which follows step-by-step route instructions, the agent must search a
+      large 3D environment on its own. World-action models (WAMs) have made
+      strong progress on aerial VLN, but applying them to language-goal aerial
+      object navigation faces two challenges: predicted futures may miss the
+      target, and sparse task feedback does not indicate which future is worth
+      acting on. To address these challenges, we propose FG-WVAM, a
+      World-Value-Action Model with Future Target Grounding. It has three
+      components: a world model, a Future Value Expert, and an Action Expert.
+      (1) To preserve target information, the world model predicts visual
+      futures and target heatmaps for each candidate, supervised by a frozen
+      Grounding DINO teacher and weighted toward target regions. (2) To learn
+      task value despite sparse feedback, the Future Value Expert scores each
+      candidate using stage-aware exploration/approach labels. (3) The Action
+      Expert generates actions from the selected candidate's visual, grounding,
+      and value states. At inference, multiple imagined futures are scored and
+      the highest-scoring one drives the action. On UAV-ON and AerialDoJo,
+      FG-WVAM improves SR by 12.3 and 10.2 points over the strongest evaluated
+      aerial WAM baseline.
+    </p>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="container">
+    <h2>Method</h2>
+    <img class="figure" src="assets/tease.jpg"
+         alt="FG-WVAM overview: target-consistent future prediction and value-guided selection">
+    <div class="grid three">
+      <div class="card">
+        <h3>Future Target Grounding</h3>
+        <p>The world model jointly predicts future visual latents and target
+        grounding tokens. A frozen Grounding DINO teacher supplies target
+        annotations from ground-truth future frames during training only.</p>
+      </div>
+      <div class="card">
+        <h3>Stage-aware Future Value</h3>
+        <p>Before discovery, a bounded exploration score combines motion,
+        rotation, and grounding-confidence change. After discovery, value is
+        normalized distance progress from the discovery frame.</p>
+      </div>
+      <div class="card">
+        <h3>Value-guided selection</h3>
+        <p>At each decision, K latent futures are generated and scored once.
+        The selected candidate's visual, grounding, and value states enter the
+        Action Expert through cross-attention.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="demos">
+  <div class="container">
+    <h2>Demo</h2>
+    <div class="grid" style="max-width: 760px">
+      <figure class="video-card">
+        <video controls muted loop playsinline preload="metadata"
+               poster="assets/future_grounding_poster.jpg">
+          <source src="videos/future_grounding.mp4" type="video/mp4">
+        </video>
+        <figcaption><strong>Predicted future and target grounding.</strong>
+        The UAV searches for a flowering shrub in a stone planter. For each
+        decision step the four views are shown on the left with the selected
+        view outlined; the right panel shows the predicted future of that view
+        with its target heatmap, and the curve shows the value trend over the
+        rollout.</figcaption>
+      </figure>
+                </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="container">
+    <h2>Main results</h2>
+    <p class="lead">
+      Same-scene evaluation, mean over three runs. See the paper for unseen
+      scenes, standard deviations, and ablations.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th colspan="4">UAV-ON</th>
+            <th colspan="4">AerialDojo</th>
+          </tr>
+          <tr class="subhead">
+            <th></th>
+            <th>SR &uarr;</th><th>OSR &uarr;</th><th>SPL &uarr;</th><th>DTS &darr;</th>
+            <th>SR &uarr;</th><th>OSR &uarr;</th><th>SPL &uarr;</th><th>DTS &darr;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>AeroAct</td>
+            <td>25.0</td><td>33.2</td><td>15.6</td><td>36.5</td>
+            <td>18.6</td><td>29.1</td><td>13.6</td><td>13.4</td>
+          </tr>
+          <tr class="ours">
+            <td>FG-WVAM</td>
+            <td>37.3</td><td>42.9</td><td>23.7</td><td>27.3</td>
+            <td>28.8</td><td>34.4</td><td>17.8</td><td>11.8</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <img class="figure" src="assets/value_compare.jpg"
+         alt="Qualitative comparison of predicted values and target grounding">
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>Code and assets</h2>
+    <p>
+      The anonymous code release contains the training pipeline, the Grounding
+      DINO label generator, the stage-aware value annotator, the four training
+      stages, and the serving path with K-candidate value selection. The
+      UAV-ON and AerialDojo datasets, the LTX-Video weights, and the
+      ProjectAirSim simulator are publicly available; the repository README
+      lists where to obtain them and how to point the configs at them.
+    </p>
+    <p>
+      <a class="btn" href="https://anonymous.4open.science/r/FG-WVAM-47F0/">Anonymous code</a>
+    </p>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="container">
+    <h2>BibTeX</h2>
+    <pre class="bibtex">@inproceedings{anonymous2027fgwvam,
+  title     = {World-Value-Action Model with Future Target Grounding for
+               Language-Goal Aerial Object Navigation},
+  author    = {Anonymous Authors},
+  booktitle = {Under review at ICLR 2027},
+  year      = {2027}
+}</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>Anonymous review page. No personal information is collected.</p>
+  </div>
+</footer>
+
+</body>
+</html>
